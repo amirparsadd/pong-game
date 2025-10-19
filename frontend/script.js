@@ -18,7 +18,7 @@ let currentState = null;
 
 function initSocket(){
   if(!window.io) return setTimeout(initSocket, 50);
-  const backend = window.__BACKEND_URL__ || 'http://localhost:3000';
+  const backend = window.__BACKEND_URL__ || 'http://pongmp-backend-vwa5fd-0264ce-185-204-171-121.traefik.me:3000';
   socket = io(backend);
   socket.on('connect', () => { console.log('connected', socket.id); });
   socket.on('welcome', d => console.log(d));
