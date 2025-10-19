@@ -45,13 +45,15 @@ function createRoom(io, p1Socket, p2Socket){
 function startRoomLoop(io, roomId){
   const room = rooms[roomId];
   if(!room) return;
-  const tickRate = 1000/60;
+  const tickRate = 1000/60; // ms per tick
   room.interval = setInterval(()=>{
     stepRoom(room);
+    // include server timestamp to help clients predict/interpolate
     io.to(roomId).emit('state:update', {
       paddles: room.state.paddles,
       ball: room.state.ball,
-      scores: room.state.scores
+      scores: room.state.scores,
+      serverTime: Date.now()
     });
   }, tickRate);
 }
@@ -132,13 +134,32 @@ function attachSocketHandlers(io){
       socket.emit('spectate:joined', { roomId });
     });
 
-    socket.on('paddle:set', ({ roomId, vy }) => {
+    // Expected payload: { roomId, vy, clientTime }
+    socket.on('paddle:set', ({ roomId, vy, clientTime }) => {
       const room = rooms[roomId];
       if(!room) return;
       if(room.players.includes(socket.id)){
         const sideName = room.players[0] === socket.id ? 'left' : 'right';
         const p = room.state.paddles[sideName];
+        // server-authoritative vy
         p.vy = vy;
+
+        // store last seen client time for simple latency estimation
+        if(!room._meta) room._meta = {};
+        room._meta[socket.id] = room._meta[socket.id] || {};
+        room._meta[socket.id].lastClientTime = clientTime || Date.now();
+        room._meta[socket.id].lastServerReceipt = Date.now();
+
+        // naive prediction: advance paddle by estimated RTT/2 to reduce visible lag
+        // estimate latency as currentServerTime - clientTime (one-way approx)
+        if(clientTime){
+          const now = Date.now();
+          const estimatedOneWay = Math.max(0, (now - clientTime));
+          // advance paddle position by vy * (estimatedOneWay / 1000)
+          p.y += p.vy * (estimatedOneWay / 1000) * 60; // scale to server ticks
+          // clamp
+          p.y = Math.max(0, Math.min(room.state.H - p.h, p.y));
+        }
       }
     });
 
@@ -164,3 +185,9 @@ function attachSocketHandlers(io){
 }
 
 module.exports = { attachSocketHandlers };
+
+// helper for tests/debugging
+module.exports.getRoomMeta = function(roomId){
+  const r = rooms[roomId];
+  return r && r._meta ? r._meta : null;
+};

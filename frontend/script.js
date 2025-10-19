@@ -23,21 +23,8 @@ function initSocket(){
   if(!window.io) return setTimeout(initSocket, 50);
   const backend = 'http://pongmp-backend-vwa5fd-0264ce-185-204-171-121.traefik.me';
   socket = io(backend);
-  socket.on('connect', () => { console.log('connected', socket.id); });
-  socket.on('welcome', d => console.log(d));
-  socket.on('queue:update', ({ waiting }) => { queueCount.textContent = `In queue: ${waiting}`; });
-
-  socket.on('spectate:list', (list) => {
-    const pick = list[0];
-    if(!pick) return alert('No active games to spectate');
-    socket.emit('spectate:join', { roomId: pick.id });
-  });
-  socket.on('spectate:joined', ({ roomId }) => { myRoom = roomId; isSpectator = true; cheerBtn.disabled = false; });
-
-  socket.on('match:start', ({ roomId, side }) => { myRoom = roomId; mySide = side; isSpectator = false; cheerBtn.disabled = false; });
-  socket.on('state:update', (state) => { currentState = state; if(state.scores){ leftScoreEl.textContent = state.scores.left; rightScoreEl.textContent = state.scores.right; } });
-  socket.on('match:end', ({ reason }) => { alert('Match ended: ' + reason); myRoom = null; mySide = null; isSpectator = false; cheerBtn.disabled = true; });
-  socket.on('cheer', ({ from }) => { showCheerToast(from); });
+  // attach shared handlers
+  attachSocketEvents(socket);
 }
 initSocket();
 
@@ -93,7 +80,8 @@ function sendInput(){
   let vy = 0;
   if(keys['w'] || keys['arrowup']) vy = -6;
   if(keys['s'] || keys['arrowdown']) vy = 6;
-  socket.emit('paddle:set', { roomId: myRoom, vy });
+  // include clientTime to help server estimate latency and for client-side prediction
+  socket.emit('paddle:set', { roomId: myRoom, vy, clientTime: Date.now() });
 }
 setInterval(sendInput, 1000/30);
 
@@ -177,4 +165,50 @@ function attachSocketEvents(s){
   s.on('state:update', (state) => { currentState = state; if(state.scores){ leftScoreEl.textContent = state.scores.left; rightScoreEl.textContent = state.scores.right; } });
   s.on('match:end', ({ reason }) => { alert('Match ended: ' + reason); myRoom = null; mySide = null; isSpectator = false; cheerBtn.disabled = true; leaveMatchBtn.disabled = true; });
   s.on('cheer', ({ from }) => { showCheerToast(from); });
+}
+
+// Enhance prediction on state updates
+// We'll compute an estimated latency and adjust local currentState for rendering
+const predictState = (state) => {
+  if(!state) return state;
+  const now = Date.now();
+  const serverTime = state.serverTime || now;
+  const estimatedRTT = Math.max(0, now - serverTime);
+  const oneWay = estimatedRTT / 2;
+
+  // shallow copy for local display/prediction
+  const s = JSON.parse(JSON.stringify(state));
+
+  // Predict paddles: assume current vy continues for oneWay ms
+  ['left','right'].forEach(side => {
+    if(s.paddles && s.paddles[side]){
+      const p = s.paddles[side];
+      // vy units are px per tick (server used ~60hz), convert to px per ms
+      const pixelsPerMs = p.vy ? (p.vy * (60/1000)) : 0;
+      p.y = p.y + pixelsPerMs * oneWay;
+      // clamp
+      p.y = Math.max(0, Math.min(500 - p.h, p.y));
+    }
+  });
+
+  // Predict ball: simple linear predict using vx/vy
+  if(s.ball){
+    s.ball.x = s.ball.x + s.ball.vx * (oneWay/16.6667); // 16.666ms per tick approx
+    s.ball.y = s.ball.y + s.ball.vy * (oneWay/16.6667);
+  }
+
+  return s;
+};
+
+// Override the state:update listener to include prediction
+const originalAttach = attachSocketEvents;
+function attachSocketEvents(ioSocket){
+  originalAttach(ioSocket);
+  ioSocket.off('state:update');
+  ioSocket.on('state:update', (state) => {
+    // update scoreboard
+    if(state.scores){ leftScoreEl.textContent = state.scores.left; rightScoreEl.textContent = state.scores.right; }
+    // set currentState to predicted state for immediate render
+    currentState = predictState(state);
+  });
 }
