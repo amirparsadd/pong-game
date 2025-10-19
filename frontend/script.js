@@ -212,33 +212,6 @@ if(chatSendBtn){ chatSendBtn.addEventListener('click', sendChat); }
 if(chatInput){ chatInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') sendChat(); }); }
 if(chatClearNameBtn){ chatClearNameBtn.addEventListener('click', ()=>{ saveChatName(''); if(chatNameInput) chatNameInput.value=''; }); }
 
-// // --- custom cursor ---
-// (function createCursor(){
-//   cursorEl = document.createElement('div');
-//   cursorEl.className = 'cursor-follower';
-//   // start off-screen
-//   cursorEl.style.transform = 'translate3d(-9999px, -9999px, 0)';
-//   document.body.appendChild(cursorEl);
-
-//   // update latest mouse coords on mousemove (cheap)
-//   document.addEventListener('mousemove', (e)=>{
-//     mouseX = e.clientX;
-//     mouseY = e.clientY;
-//   }, { passive: true });
-
-//   // apply transform in RAF (GPU accelerated) to avoid layout thrashing
-//   (function tick(){
-//     if(cursorEl){
-//       // center the cursor element on the pointer using translate3d
-//       // cursor size is 14px, so offset by 7 to center
-//       const cx = Math.round(mouseX - 7);
-//       const cy = Math.round(mouseY - 7);
-//       cursorEl.style.transform = `translate3d(${cx}px, ${cy}px, 0)`;
-//     }
-//     requestAnimationFrame(tick);
-//   })();
-// })();
-
 // Re-attach events to a socket (used after reconnect)
 function attachSocketEvents(s){
   if(!s) return;
