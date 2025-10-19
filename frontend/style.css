@@ -24,13 +24,7 @@ canvas{display:block;margin:6px auto;background:linear-gradient(180deg,#071425,#
 .controls button:hover{transform:translateY(-3px);box-shadow:0 14px 36px rgba(93,242,255,0.12)}
 .controls button:active{transform:translateY(0)}
 .controls button[disabled]{opacity:0.45;transform:none;box-shadow:none;cursor:default}
-/* no custom cursor; use system cursor */
-body, button { cursor: auto; }
-/* .cursor-follower removed */
 .hint{margin-top:12px;color:var(--muted)}
-
-/* Custom neon cursor */
-body, button { cursor: none; }
 
 /* subtle floating animation for canvas */
 @keyframes floaty{0%{transform:translateY(0)}50%{transform:translateY(-6px)}100%{transform:translateY(0)}}
