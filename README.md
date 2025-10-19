@@ -1,3 +1,24 @@
+# Pong (split frontend/backend)
+
+Project reorganized: frontend static site in `frontend/`, backend Socket.IO server in `backend/`.
+
+Local (dev):
+
+- Start backend:
+
+  npm run start:backend
+
+- Start frontend (serves static files on :5000):
+
+  npm run start:frontend
+
+Docker:
+
+- Build backend: `docker build -t pong-backend ./backend`
+- Run backend: `docker run -e PORT=3000 -p 3000:3000 pong-backend`
+
+- Build frontend: `docker build -t pong-frontend ./frontend`
+- Run frontend while injecting backend URL: `docker run -e BACKEND_URL=http://host.docker.internal:3000 -p 80:80 pong-frontend`
 Pong vs AI
 
 Quick local pong game implemented with HTML5 canvas and vanilla JS.

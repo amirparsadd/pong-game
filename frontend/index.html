@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pong Multiplayer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Pong Multiplayer</h1>
+    <div class="scoreboard">
+      <div id="left-score">0</div>
+      <div class="separator">—</div>
+      <div id="right-score">0</div>
+    </div>
+
+    <canvas id="game" width="800" height="500"></canvas>
+
+    <div class="controls">
+      <button id="join-queue">Join Queue</button>
+      <button id="leave-queue" disabled>Leave Queue</button>
+      <button id="spectate-list">Spectate</button>
+      <button id="cheer" disabled>Cheer 🎉</button>
+      <div id="queue-count" style="margin-left:8px;color:#94a3b8">In queue: 0</div>
+    </div>
+
+    <p class="hint">W/S or Up/Down arrows to move when you're in a match. Spectators can watch and press Cheer.</p>
+  </div>
+
+  <!-- runtime config: backend url will be injected by Docker entrypoint if provided -->
+  <script>
+    window.__BACKEND_URL__ = window.__BACKEND_URL__ || 'http://localhost:3000';
+  </script>
+
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
