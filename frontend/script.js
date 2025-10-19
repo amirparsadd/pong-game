@@ -125,29 +125,39 @@ function loop(){ render(); requestAnimationFrame(loop); }
 loop();
 
 function resizeCanvas(){
-  // Make canvas fill available space inside .container while keeping aspect ratio
-  const playArea = document.querySelector('.play-area');
-  const chatPanel = document.querySelector('.chat-panel');
-  const container = document.querySelector('.container');
-  const containerRect = container ? container.getBoundingClientRect() : { width: window.innerWidth };
-  // available width inside container minus chat panel
-  const chatWidth = chatPanel ? Math.min(300, chatPanel.getBoundingClientRect().width) : 0;
-  const padding = 40; // safety
-  const maxCanvasW = Math.min(800, Math.max(320, containerRect.width - chatWidth - padding));
-  // compute available height: viewport height minus header/controls/hints
+  // Layout-driven sizing: use CSS/computed width then set height by aspect ratio.
+  const ratio = 800/500;
+  // Allow layout to determine the canvas clientWidth (flexbox + chat panel)
+  const computedCSSWidth = Math.max(320, Math.min(800, canvas.clientWidth || canvas.offsetWidth || 800));
+
+  // compute desired height from width
+  let desiredH = Math.round(computedCSSWidth / ratio);
+
+  // compute available height (exclude header/controls/hint)
   const used = Array.from(document.querySelectorAll('.site-header, .scoreboard, .controls, .hint')).reduce((acc, el)=>{
     if(!el) return acc; const r = el.getBoundingClientRect(); return acc + Math.ceil(r.height) + 8; }, 0);
-  const availH = Math.max(200, window.innerHeight - used - 80);
-  // compute canvas size preserving aspect ratio (800x500)
-  const ratio = 800/500;
-  let desiredW = Math.min(maxCanvasW, Math.round(availH * ratio));
-  let desiredH = Math.round(desiredW / ratio);
-  // if height exceeds available, clamp and recalc width
-  if(desiredH > availH){ desiredH = availH; desiredW = Math.round(desiredH * ratio); }
+  const availH = Math.max(160, window.innerHeight - used - 40);
+
+  let desiredW = computedCSSWidth;
+  // If computed height is too tall for viewport, clamp height and recalc width
+  if(desiredH > availH){
+    desiredH = availH;
+    desiredW = Math.round(desiredH * ratio);
+  }
+
+  // apply sizes both as CSS and element pixel dimensions
   canvas.style.width = desiredW + 'px';
   canvas.style.height = desiredH + 'px';
-  W = canvas.width = desiredW;
-  H = canvas.height = desiredH;
+
+  // set internal canvas resolution to match displayed size (devicePixelRatio aware)
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(desiredW * dpr);
+  canvas.height = Math.round(desiredH * dpr);
+  canvas.style.width = desiredW + 'px';
+  canvas.style.height = desiredH + 'px';
+  // scale drawing context
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  W = desiredW; H = desiredH;
 }
 window.addEventListener('resize', resizeCanvas); resizeCanvas();
 
