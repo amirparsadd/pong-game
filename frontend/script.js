@@ -202,7 +202,8 @@ const predictState = (state) => {
 
 // Override the state:update listener to include prediction
 const originalAttach = attachSocketEvents;
-function attachSocketEvents(ioSocket){
+// reassign the existing attachSocketEvents to a wrapper (use expression to avoid hoisting / TDZ)
+attachSocketEvents = function(ioSocket){
   originalAttach(ioSocket);
   ioSocket.off('state:update');
   ioSocket.on('state:update', (state) => {
@@ -211,4 +212,4 @@ function attachSocketEvents(ioSocket){
     // set currentState to predicted state for immediate render
     currentState = predictState(state);
   });
-}
+};
