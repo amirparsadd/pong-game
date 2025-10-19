@@ -1,21 +1,45 @@
 :root{
-  --bg:#0f1724;
-  --panel:#0b1220;
-  --accent:#8be9fd;
-  --muted:#94a3b8;
+  --bg-1: #04020b;
+  --bg-2: #07101b;
+  --panel: rgba(6,6,12,0.6);
+  --neon-pink: #ff4dc9;
+  --neon-cyan: #5df2ff;
+  --neon-yellow: #ffdf57;
+  --muted: #94a3b8;
+  --glass: rgba(255,255,255,0.04);
 }
 *{box-sizing:border-box}
-html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,-apple-system,"Helvetica Neue",Arial}
-body{display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#020617 0%, #071431 70%);color:#e6eef8}
-.container{width:92%;max-width:980px;padding:20px;border-radius:10px;text-align:center}
-h1{margin:6px 0 8px;font-weight:600}
-.scoreboard{display:flex;align-items:center;justify-content:center;gap:12px;font-size:28px;margin-bottom:12px}
-.scoreboard .separator{color:var(--muted)}
-canvas{display:block;margin:0 auto;background:linear-gradient(180deg,#071425,#02101b);border-radius:6px;box-shadow:0 8px 30px rgba(2,6,23,0.7)}
-.controls{margin-top:12px;display:flex;gap:8px;align-items:center;justify-content:center}
-.controls button, .controls select{padding:8px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.03);color:inherit}
-.hint{margin-top:10px;color:var(--muted)}
-/* Responsive canvas */
-@media (max-width:700px){
+html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
+body{display:flex;align-items:center;justify-content:center;background:radial-gradient(1200px 400px at 10% 10%, rgba(93,242,255,0.04), transparent), linear-gradient(180deg,var(--bg-1), var(--bg-2));color:#e6eef8}
+.container{width:94%;max-width:1100px;padding:28px;border-radius:14px;text-align:center;backdrop-filter: blur(6px);background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));box-shadow: 0 10px 60px rgba(3,6,20,0.8);border:1px solid rgba(255,255,255,0.03)}
+.site-header{display:flex;align-items:flex-end;justify-content:center;gap:12px;margin-bottom:6px}
+.site-header h1{margin:0;font-weight:700;letter-spacing:1px;font-size:28px;color:var(--neon-pink);text-shadow:0 0 12px rgba(255,77,201,0.12),0 0 36px rgba(93,242,255,0.05)}
+.site-header .sub{font-size:12px;color:var(--muted);margin-bottom:6px}
+.scoreboard{display:flex;align-items:center;justify-content:center;gap:18px;font-size:36px;margin-bottom:14px}
+.scoreboard div{background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:6px 14px;border-radius:8px;border:1px solid rgba(93,242,255,0.05);min-width:54px}
+.scoreboard .separator{color:var(--muted);font-size:20px}
+canvas{display:block;margin:6px auto;background:linear-gradient(180deg,#071425,#02101b);border-radius:10px;box-shadow:0 25px 60px rgba(5,10,20,0.7);border:1px solid rgba(93,242,255,0.04)}
+.controls{margin-top:16px;display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap}
+.controls button{padding:10px 14px;border-radius:10px;border:0;cursor:pointer;background:linear-gradient(90deg,var(--neon-cyan),var(--neon-pink));color:#03121a;font-weight:600;box-shadow:0 6px 20px rgba(93,242,255,0.08);transition:transform .12s ease, box-shadow .12s ease}
+.controls button:hover{transform:translateY(-3px);box-shadow:0 14px 36px rgba(93,242,255,0.12)}
+.controls button:active{transform:translateY(0)}
+.controls button[disabled]{opacity:0.45;transform:none;box-shadow:none;cursor:default}
+.controls .danger{background:linear-gradient(90deg,var(--neon-pink),var(--neon-yellow));color:#081018}
+.queue-bubble{font-size:13px;color:var(--muted);padding-left:8px}
+.hint{margin-top:12px;color:var(--muted)}
+
+/* Custom neon cursor */
+body, button { cursor: none; }
+.cursor-follower{position:fixed;pointer-events:none;z-index:9999;width:14px;height:14px;border-radius:50%;will-change:transform;transform:translate3d(-50%,-50%,0);mix-blend-mode:screen;box-shadow:0 0 10px rgba(93,242,255,0.85),0 0 22px rgba(255,77,201,0.35);border:1px solid rgba(255,255,255,0.06);background:linear-gradient(90deg,var(--neon-cyan),var(--neon-pink));}
+
+/* subtle floating animation for canvas */
+@keyframes floaty{0%{transform:translateY(0)}50%{transform:translateY(-6px)}100%{transform:translateY(0)}}
+canvas{animation:floaty 6s ease-in-out infinite}
+
+/* Responsive */
+@media (max-width:900px){
+  .scoreboard{font-size:26px}
+  .site-header h1{font-size:22px}
   canvas{width:100%;height:auto}
 }
+

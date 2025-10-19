@@ -5,6 +5,7 @@ const leftScoreEl = document.getElementById('left-score');
 const rightScoreEl = document.getElementById('right-score');
 const joinBtn = document.getElementById('join-queue');
 const leaveBtn = document.getElementById('leave-queue');
+const leaveMatchBtn = document.getElementById('leave-match');
 const spectateListBtn = document.getElementById('spectate-list');
 const cheerBtn = document.getElementById('cheer');
 const queueCount = document.getElementById('queue-count');
@@ -15,6 +16,8 @@ let myRoom = null;
 let mySide = null;
 let isSpectator = false;
 let currentState = null;
+let cursorEl = null;
+let mouseX = -9999, mouseY = -9999;
 
 function initSocket(){
   if(!window.io) return setTimeout(initSocket, 50);
@@ -47,6 +50,23 @@ leaveBtn.addEventListener('click', () => {
   if(!socket) return;
   socket.emit('queue:leave');
   joinBtn.disabled = false; leaveBtn.disabled = true;
+});
+
+// Leave the current match (if any) and reset state. We disconnect and reconnect the socket
+// so the server cleans up any room associations. The backend URL is unchanged.
+leaveMatchBtn.addEventListener('click', () => {
+  if(!socket) return;
+  // if currently in a room tell server we leave
+  if(myRoom){
+    try{ socket.emit('queue:leave'); }catch(e){}
+    try{ socket.emit('spectate:leave'); }catch(e){}
+  }
+  // gracefully disconnect then recreate a new socket connection
+  const backend = socket.io.uri || socket.io.engine.hostname || null;
+  socket.disconnect();
+  myRoom = null; mySide = null; isSpectator = false; currentState = null;
+  joinBtn.disabled = false; leaveBtn.disabled = true; cheerBtn.disabled = true; leaveMatchBtn.disabled = true;
+  setTimeout(()=>{ if(window.io){ socket = io(backend || 'http://localhost:3000'); attachSocketEvents(socket); } }, 200);
 });
 
 spectateListBtn.addEventListener('click', () => {
@@ -113,3 +133,48 @@ loop();
 
 function resizeCanvas(){ W = canvas.width = 800; H = canvas.height = 500; }
 window.addEventListener('resize', resizeCanvas); resizeCanvas();
+
+// --- custom cursor ---
+(function createCursor(){
+  cursorEl = document.createElement('div');
+  cursorEl.className = 'cursor-follower';
+  // start off-screen
+  cursorEl.style.transform = 'translate3d(-9999px, -9999px, 0)';
+  document.body.appendChild(cursorEl);
+
+  // update latest mouse coords on mousemove (cheap)
+  document.addEventListener('mousemove', (e)=>{
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  }, { passive: true });
+
+  // apply transform in RAF (GPU accelerated) to avoid layout thrashing
+  (function tick(){
+    if(cursorEl){
+      // center the cursor element on the pointer using translate3d
+      // cursor size is 14px, so offset by 7 to center
+      const cx = Math.round(mouseX - 7);
+      const cy = Math.round(mouseY - 7);
+      cursorEl.style.transform = `translate3d(${cx}px, ${cy}px, 0)`;
+    }
+    requestAnimationFrame(tick);
+  })();
+})();
+
+// Re-attach events to a socket (used after reconnect)
+function attachSocketEvents(s){
+  if(!s) return;
+  s.on('connect', () => { console.log('connected', s.id); });
+  s.on('welcome', d => console.log(d));
+  s.on('queue:update', ({ waiting }) => { queueCount.textContent = `In queue: ${waiting}`; });
+  s.on('spectate:list', (list) => {
+    const pick = list[0];
+    if(!pick) return alert('No active games to spectate');
+    s.emit('spectate:join', { roomId: pick.id });
+  });
+  s.on('spectate:joined', ({ roomId }) => { myRoom = roomId; isSpectator = true; cheerBtn.disabled = false; leaveMatchBtn.disabled = false; });
+  s.on('match:start', ({ roomId, side }) => { myRoom = roomId; mySide = side; isSpectator = false; cheerBtn.disabled = false; leaveMatchBtn.disabled = false; });
+  s.on('state:update', (state) => { currentState = state; if(state.scores){ leftScoreEl.textContent = state.scores.left; rightScoreEl.textContent = state.scores.right; } });
+  s.on('match:end', ({ reason }) => { alert('Match ended: ' + reason); myRoom = null; mySide = null; isSpectator = false; cheerBtn.disabled = true; leaveMatchBtn.disabled = true; });
+  s.on('cheer', ({ from }) => { showCheerToast(from); });
+}

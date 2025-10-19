@@ -8,7 +8,10 @@
 </head>
 <body>
   <div class="container">
-    <h1>Pong Multiplayer</h1>
+    <header class="site-header">
+      <h1>Pong Multiplayer</h1>
+      <div class="sub">multiplayer • live • neon</div>
+    </header>
     <div class="scoreboard">
       <div id="left-score">0</div>
       <div class="separator">—</div>
@@ -20,6 +23,7 @@
     <div class="controls">
       <button id="join-queue">Join Queue</button>
       <button id="leave-queue" disabled>Leave Queue</button>
+      <button id="leave-match" class="danger" title="Leave current match" disabled>Leave Match</button>
       <button id="spectate-list">Spectate</button>
       <button id="cheer" disabled>Cheer 🎉</button>
       <div id="queue-count" style="margin-left:8px;color:#94a3b8">In queue: 0</div>
