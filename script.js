@@ -22,7 +22,7 @@ let currentState = null;
 function initSocket(){
   if(!window.io) return setTimeout(initSocket, 50);
   // explicitly connect to the backend server (where server.js runs)
-  socket = io('http://localhost:3000');
+  socket = io('http://pongmp-backend-vwa5fd-0264ce-185-204-171-121.traefik.me');
   socket.on('connect', () => { console.log('connected', socket.id); });
   socket.on('welcome', d => console.log(d));
   socket.on('queue:update', ({ waiting }) => { queueCount.textContent = `In queue: ${waiting}`; });
