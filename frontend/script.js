@@ -16,7 +16,7 @@ let myRoom = null;
 let mySide = null;
 let isSpectator = false;
 let currentState = null;
-let cursorEl = null;
+// let cursorEl = null;
 let mouseX = -9999, mouseY = -9999;
 
 function initSocket(){
@@ -122,32 +122,32 @@ loop();
 function resizeCanvas(){ W = canvas.width = 800; H = canvas.height = 500; }
 window.addEventListener('resize', resizeCanvas); resizeCanvas();
 
-// --- custom cursor ---
-(function createCursor(){
-  cursorEl = document.createElement('div');
-  cursorEl.className = 'cursor-follower';
-  // start off-screen
-  cursorEl.style.transform = 'translate3d(-9999px, -9999px, 0)';
-  document.body.appendChild(cursorEl);
+// // --- custom cursor ---
+// (function createCursor(){
+//   cursorEl = document.createElement('div');
+//   cursorEl.className = 'cursor-follower';
+//   // start off-screen
+//   cursorEl.style.transform = 'translate3d(-9999px, -9999px, 0)';
+//   document.body.appendChild(cursorEl);
 
-  // update latest mouse coords on mousemove (cheap)
-  document.addEventListener('mousemove', (e)=>{
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-  }, { passive: true });
+//   // update latest mouse coords on mousemove (cheap)
+//   document.addEventListener('mousemove', (e)=>{
+//     mouseX = e.clientX;
+//     mouseY = e.clientY;
+//   }, { passive: true });
 
-  // apply transform in RAF (GPU accelerated) to avoid layout thrashing
-  (function tick(){
-    if(cursorEl){
-      // center the cursor element on the pointer using translate3d
-      // cursor size is 14px, so offset by 7 to center
-      const cx = Math.round(mouseX - 7);
-      const cy = Math.round(mouseY - 7);
-      cursorEl.style.transform = `translate3d(${cx}px, ${cy}px, 0)`;
-    }
-    requestAnimationFrame(tick);
-  })();
-})();
+//   // apply transform in RAF (GPU accelerated) to avoid layout thrashing
+//   (function tick(){
+//     if(cursorEl){
+//       // center the cursor element on the pointer using translate3d
+//       // cursor size is 14px, so offset by 7 to center
+//       const cx = Math.round(mouseX - 7);
+//       const cy = Math.round(mouseY - 7);
+//       cursorEl.style.transform = `translate3d(${cx}px, ${cy}px, 0)`;
+//     }
+//     requestAnimationFrame(tick);
+//   })();
+// })();
 
 // Re-attach events to a socket (used after reconnect)
 function attachSocketEvents(s){
