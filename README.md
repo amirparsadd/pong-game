@@ -1,3 +1,4 @@
+*guys dont look at this pls its pure ai slop*
 # Pong (split frontend/backend)
 
 Project reorganized: frontend static site in `frontend/`, backend Socket.IO server in `backend/`.
