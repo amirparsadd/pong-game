@@ -169,6 +169,21 @@ function attachSocketHandlers(io){
       io.to(roomId).emit('cheer', { from: socket.id });
     });
 
+    // Chat: players and spectators can send messages to the room
+    // payload: { roomId, name, message }
+    socket.on('chat:send', ({ roomId, name, message }) => {
+      const room = rooms[roomId];
+      if(!room) return;
+      const ts = Date.now();
+      // broadcast to everyone in the room (players + spectators)
+      io.to(roomId).emit('chat:message', {
+        fromId: socket.id,
+        name: name || 'Anon',
+        message: String(message || ''),
+        ts
+      });
+    });
+
     socket.on('disconnect', () => {
       waiting = waiting.filter(s => s !== socket);
       io.emit('queue:update', { waiting: waiting.length });

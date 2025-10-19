@@ -8,6 +8,11 @@ const leaveBtn = document.getElementById('leave-queue');
 const spectateListBtn = document.getElementById('spectate-list');
 const cheerBtn = document.getElementById('cheer');
 const queueCount = document.getElementById('queue-count');
+const chatNameInput = document.getElementById('chat-name');
+const chatClearNameBtn = document.getElementById('chat-clear-name');
+const chatMessagesEl = document.getElementById('chat-messages');
+const chatInput = document.getElementById('chat-input');
+const chatSendBtn = document.getElementById('chat-send');
 
 let W = canvas.width, H = canvas.height;
 
@@ -38,6 +43,13 @@ function initSocket(){
   socket.on('state:update', (state) => { currentState = state; if(state.scores){ leftScoreEl.textContent = state.scores.left; rightScoreEl.textContent = state.scores.right; } });
   socket.on('match:end', ({ reason }) => { alert('Match ended: ' + reason); myRoom = null; mySide = null; isSpectator = false; cheerBtn.disabled = true; });
   socket.on('cheer', ({ from }) => { showCheerToast(from); });
+  socket.on('chat:message', ({ fromId, name, message, ts }) => {
+    if(chatMessagesEl){
+      const el = document.createElement('div'); el.textContent = `${name||'Anon'}: ${message}`; chatMessagesEl.appendChild(el); chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+    } else {
+      console.log('chat', name, message);
+    }
+  });
 }
 initSocket();
 

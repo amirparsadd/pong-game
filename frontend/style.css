@@ -37,3 +37,18 @@ canvas{animation:floaty 6s ease-in-out infinite}
   canvas{width:100%;height:auto}
 }
 
+/* Chat panel */
+.chat-panel{margin-top:18px;background:var(--panel);padding:12px;border-radius:8px;text-align:left;max-width:800px;margin-left:auto;margin-right:auto}
+.chat-header{font-weight:700;color:var(--neon-cyan);margin-bottom:8px}
+.chat-controls{display:flex;gap:8px;margin-bottom:8px}
+.chat-controls input{flex:1;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+.chat-controls button{padding:8px 10px;border-radius:6px;border:0;background:rgba(255,255,255,0.03);color:var(--muted);cursor:pointer}
+.chat-messages{height:160px;overflow:auto;padding:8px;border-radius:6px;background:var(--glass);border:1px solid rgba(255,255,255,0.02);margin-bottom:8px}
+.chat-msg{margin-bottom:6px;font-size:13px}
+.chat-time{color:var(--muted);margin-right:6px}
+.chat-name{color:var(--neon-yellow);font-weight:600}
+.chat-text{color:#e6eef8}
+.chat-input{display:flex;gap:8px}
+.chat-input input{flex:1;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit}
+.chat-input button{padding:8px 12px;border-radius:6px;border:0;background:linear-gradient(90deg,var(--neon-cyan),var(--neon-pink));cursor:pointer}
+

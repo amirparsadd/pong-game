@@ -9,6 +9,11 @@ const leaveMatchBtn = document.getElementById('leave-match');
 const spectateListBtn = document.getElementById('spectate-list');
 const cheerBtn = document.getElementById('cheer');
 const queueCount = document.getElementById('queue-count');
+const chatNameInput = document.getElementById('chat-name');
+const chatClearNameBtn = document.getElementById('chat-clear-name');
+const chatMessagesEl = document.getElementById('chat-messages');
+const chatInput = document.getElementById('chat-input');
+const chatSendBtn = document.getElementById('chat-send');
 
 let W = canvas.width, H = canvas.height;
 let socket = null;
@@ -122,6 +127,48 @@ loop();
 function resizeCanvas(){ W = canvas.width = 800; H = canvas.height = 500; }
 window.addEventListener('resize', resizeCanvas); resizeCanvas();
 
+// --- Chat helpers and persistence ---
+const CHAT_NAME_KEY = 'pong:chat:name';
+
+function loadChatName(){
+  try{ return localStorage.getItem(CHAT_NAME_KEY) || ''; }catch(e){ return ''; }
+}
+function saveChatName(n){ try{ localStorage.setItem(CHAT_NAME_KEY, n || ''); }catch(e){} }
+
+function appendChatMessage({ fromId, name, message, ts }){
+  if(!chatMessagesEl) return;
+  const el = document.createElement('div');
+  el.className = 'chat-msg';
+  const time = ts ? new Date(ts) : new Date();
+  const hh = String(time.getHours()).padStart(2,'0');
+  const mm = String(time.getMinutes()).padStart(2,'0');
+  el.innerHTML = `<span class="chat-time">[${hh}:${mm}]</span> <span class="chat-name">${escapeHtml(name||'Anon')}</span>: <span class="chat-text">${escapeHtml(message)}</span>`;
+  chatMessagesEl.appendChild(el);
+  // keep scroll pinned to bottom
+  chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+}
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[c]); }
+
+function sendChat(){
+  if(!socket) return alert('Socket not ready');
+  const msg = (chatInput && chatInput.value || '').trim();
+  if(!msg) return;
+  const name = (chatNameInput && chatNameInput.value) || 'Anon';
+  // persist name
+  saveChatName(name);
+  // if in a room, send to room; otherwise broadcast to server (no-room messages ignored server-side)
+  const payload = { roomId: myRoom, name, message: msg };
+  socket.emit('chat:send', payload);
+  chatInput.value = '';
+}
+
+// populate name input from localStorage
+if(chatNameInput){ chatNameInput.value = loadChatName(); }
+if(chatSendBtn){ chatSendBtn.addEventListener('click', sendChat); }
+if(chatInput){ chatInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') sendChat(); }); }
+if(chatClearNameBtn){ chatClearNameBtn.addEventListener('click', ()=>{ saveChatName(''); if(chatNameInput) chatNameInput.value=''; }); }
+
 // // --- custom cursor ---
 // (function createCursor(){
 //   cursorEl = document.createElement('div');
@@ -165,6 +212,10 @@ function attachSocketEvents(s){
   s.on('state:update', (state) => { currentState = state; if(state.scores){ leftScoreEl.textContent = state.scores.left; rightScoreEl.textContent = state.scores.right; } });
   s.on('match:end', ({ reason }) => { alert('Match ended: ' + reason); myRoom = null; mySide = null; isSpectator = false; cheerBtn.disabled = true; leaveMatchBtn.disabled = true; });
   s.on('cheer', ({ from }) => { showCheerToast(from); });
+  // chat messages from server
+  s.on('chat:message', ({ fromId, name, message, ts }) => {
+    appendChatMessage({ fromId, name, message, ts });
+  });
 }
 
 // Enhance prediction on state updates
