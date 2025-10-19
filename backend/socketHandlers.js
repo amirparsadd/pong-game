@@ -206,3 +206,15 @@ module.exports.getRoomMeta = function(roomId){
   const r = rooms[roomId];
   return r && r._meta ? r._meta : null;
 };
+
+// Return a compact list of active games to be used by a lightweight polling endpoint.
+// Keep payload minimal: short keys and only scores/players count and running flag.
+module.exports.getActiveGames = function(){
+  return Object.values(rooms).map(r => ({
+    id: r.id,
+    p: Array.isArray(r.players) ? r.players.length : 0,
+    s: r.state && r.state.scores ? r.state.scores : { left: 0, right: 0 },
+    r: r.state && r.state.running ? true : false,
+    t: Date.now()
+  }));
+};

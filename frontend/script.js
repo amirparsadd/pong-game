@@ -280,3 +280,56 @@ attachSocketEvents = function(ioSocket){
     currentState = predictState(state);
   });
 };
+
+// --- Active games polling (lightweight) ---
+// Polls the backend every 5 seconds for a minimal list of active games.
+// Uses ETag to reduce bandwidth (server returns 304 when unchanged).
+const gamesListEl = document.getElementById('games-list');
+let gamesEtag = null;
+let lastGamesPayload = null;
+
+async function fetchActiveGames(){
+  try{
+    const backendBase = (socket && socket.io && socket.io.uri) ? socket.io.uri : '';
+    const url = (backendBase || '') + '/api/active-games';
+    const headers = {};
+    if(gamesEtag) headers['If-None-Match'] = gamesEtag;
+    const res = await fetch(url, { headers, credentials: 'include' });
+    if(res.status === 304) return; // unchanged
+    if(!res.ok) return;
+    const newEtag = res.headers.get('ETag');
+    const data = await res.json();
+    // shallow compare payload string to avoid DOM churn
+    const payloadStr = JSON.stringify(data);
+    if(payloadStr === lastGamesPayload) return; // no change
+    lastGamesPayload = payloadStr;
+    gamesEtag = newEtag;
+    renderGamesList(data);
+  }catch(e){
+    // silently ignore to avoid spamming errors; will retry
+    console.warn('fetchActiveGames failed', e);
+  }
+}
+
+function renderGamesList(list){
+  if(!gamesListEl) return;
+  gamesListEl.innerHTML = '';
+  if(!Array.isArray(list) || list.length === 0){
+    gamesListEl.innerHTML = '<div style="color:var(--muted);padding:8px">No active games</div>';
+    return;
+  }
+  // list is expected to be compact: { id, p, s, r, t }
+  list.forEach(item => {
+    const el = document.createElement('div');
+    el.style.padding = '6px';
+    el.style.borderBottom = '1px solid rgba(255,255,255,0.02)';
+    el.style.fontSize = '13px';
+    el.innerHTML = `<div style="font-weight:600">${escapeHtml(item.id)}</div>
+      <div style="color:var(--muted);margin-top:4px">Players: ${item.p} · ${item.s.left}-${item.s.right} · ${item.r? 'running':'stopped'}</div>`;
+    gamesListEl.appendChild(el);
+  });
+}
+
+// Start polling at 5s interval, but run once immediately
+setTimeout(fetchActiveGames, 500);
+setInterval(fetchActiveGames, 5000);

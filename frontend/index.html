@@ -34,6 +34,12 @@
           <button id="chat-send">Send</button>
         </div>
       </aside>
+      <!-- Active games sidebar (polled, lightweight) -->
+      <aside id="games-sidebar" class="chat-panel" style="width:220px">
+        <div class="chat-header">Active Games</div>
+        <div id="games-list" style="max-height:360px;overflow:auto;padding:6px"></div>
+        <div style="margin-top:8px;text-align:center;color:var(--muted);font-size:12px">Updated every 5s</div>
+      </aside>
     </div>
 
     <div class="controls">
