@@ -126,16 +126,24 @@ loop();
 
 function resizeCanvas(){
   // Make canvas fill available space inside .container while keeping aspect ratio
+  const playArea = document.querySelector('.play-area');
+  const chatPanel = document.querySelector('.chat-panel');
   const container = document.querySelector('.container');
-  const rect = container ? container.getBoundingClientRect() : { width: window.innerWidth };
-  const maxW = Math.min(800, rect.width - 40);
-  // compute available height: viewport height minus header/controls/chat heights
-  const used = Array.from(document.querySelectorAll('.site-header, .scoreboard, .controls, .chat-panel, .hint')).reduce((acc, el)=>{
+  const containerRect = container ? container.getBoundingClientRect() : { width: window.innerWidth };
+  // available width inside container minus chat panel
+  const chatWidth = chatPanel ? Math.min(300, chatPanel.getBoundingClientRect().width) : 0;
+  const padding = 40; // safety
+  const maxCanvasW = Math.min(800, Math.max(320, containerRect.width - chatWidth - padding));
+  // compute available height: viewport height minus header/controls/hints
+  const used = Array.from(document.querySelectorAll('.site-header, .scoreboard, .controls, .hint')).reduce((acc, el)=>{
     if(!el) return acc; const r = el.getBoundingClientRect(); return acc + Math.ceil(r.height) + 8; }, 0);
   const availH = Math.max(200, window.innerHeight - used - 80);
-  // maintain 16:10-ish layout close to original (800x500)
-  const desiredW = Math.min(maxW, Math.round(availH * (800/500)));
-  const desiredH = Math.round(desiredW * (500/800));
+  // compute canvas size preserving aspect ratio (800x500)
+  const ratio = 800/500;
+  let desiredW = Math.min(maxCanvasW, Math.round(availH * ratio));
+  let desiredH = Math.round(desiredW / ratio);
+  // if height exceeds available, clamp and recalc width
+  if(desiredH > availH){ desiredH = availH; desiredW = Math.round(desiredH * ratio); }
   canvas.style.width = desiredW + 'px';
   canvas.style.height = desiredH + 'px';
   W = canvas.width = desiredW;

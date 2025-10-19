@@ -18,7 +18,23 @@
       <div id="right-score">0</div>
     </div>
 
-    <canvas id="game" width="800" height="500"></canvas>
+    <div class="play-area">
+      <canvas id="game" width="800" height="500"></canvas>
+
+      <!-- Chat panel -->
+      <aside class="chat-panel">
+        <div class="chat-header">Chat</div>
+        <div class="chat-controls">
+          <input id="chat-name" placeholder="Your name" maxlength="32" />
+          <button id="chat-clear-name" title="Clear saved name">Clear</button>
+        </div>
+        <div id="chat-messages" class="chat-messages" aria-live="polite"></div>
+        <div class="chat-input">
+          <input id="chat-input" placeholder="Say something..." maxlength="256" />
+          <button id="chat-send">Send</button>
+        </div>
+      </aside>
+    </div>
 
     <div class="controls">
       <button id="join-queue">Join Queue</button>
@@ -30,19 +46,7 @@
     </div>
     <p class="hint">W/S or Up/Down arrows to move when you're in a match. Spectators can watch and press Cheer.</p>
 
-    <!-- Chat panel -->
-    <aside class="chat-panel">
-      <div class="chat-header">Chat</div>
-      <div class="chat-controls">
-        <input id="chat-name" placeholder="Your name" maxlength="32" />
-        <button id="chat-clear-name" title="Clear saved name">Clear</button>
-      </div>
-      <div id="chat-messages" class="chat-messages" aria-live="polite"></div>
-      <div class="chat-input">
-        <input id="chat-input" placeholder="Say something..." maxlength="256" />
-        <button id="chat-send">Send</button>
-      </div>
-    </aside>
+    <!-- chat moved into .play-area -->
   </div>
 
   <!-- runtime config: backend url will be injected by Docker entrypoint if provided -->
