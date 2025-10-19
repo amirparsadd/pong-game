@@ -124,8 +124,33 @@ function render(){
 function loop(){ render(); requestAnimationFrame(loop); }
 loop();
 
-function resizeCanvas(){ W = canvas.width = 800; H = canvas.height = 500; }
+function resizeCanvas(){
+  // Make canvas fill available space inside .container while keeping aspect ratio
+  const container = document.querySelector('.container');
+  const rect = container ? container.getBoundingClientRect() : { width: window.innerWidth };
+  const maxW = Math.min(800, rect.width - 40);
+  // compute available height: viewport height minus header/controls/chat heights
+  const used = Array.from(document.querySelectorAll('.site-header, .scoreboard, .controls, .chat-panel, .hint')).reduce((acc, el)=>{
+    if(!el) return acc; const r = el.getBoundingClientRect(); return acc + Math.ceil(r.height) + 8; }, 0);
+  const availH = Math.max(200, window.innerHeight - used - 80);
+  // maintain 16:10-ish layout close to original (800x500)
+  const desiredW = Math.min(maxW, Math.round(availH * (800/500)));
+  const desiredH = Math.round(desiredW * (500/800));
+  canvas.style.width = desiredW + 'px';
+  canvas.style.height = desiredH + 'px';
+  W = canvas.width = desiredW;
+  H = canvas.height = desiredH;
+}
 window.addEventListener('resize', resizeCanvas); resizeCanvas();
+
+// prevent arrow keys from scrolling the page when not typing in an input
+window.addEventListener('keydown', (e) => {
+  const active = document.activeElement;
+  const isInput = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA');
+  if(!isInput && (e.key === 'ArrowUp' || e.key === 'ArrowDown')){
+    e.preventDefault();
+  }
+}, { passive: false });
 
 // --- Chat helpers and persistence ---
 const CHAT_NAME_KEY = 'pong:chat:name';
